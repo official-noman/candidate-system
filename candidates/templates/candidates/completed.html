@@ -1,182 +1,14 @@
 {% extends 'candidates/base.html' %}
+{% load static %}
 
-{% block content %}
-<div class="container-fluid py-4">
-    <div class="row mb-4">
-        <div class="col-12">
-            <h2 class="h4 fw-semibold text-dark mb-1">Completed Interviews</h2>
-            <p class="text-secondary mb-0">Review and manage interview results</p>
-        </div>
-    </div>
+{% block title %}Completed Interviews - Recruitment System{% endblock %}
 
-    <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white border-bottom py-3">
-            <ul class="nav nav-tabs border-0 card-header-tabs" id="interviewTabs" role="tablist">
-                <li class="nav-item">
-                    <button class="nav-link active border-0 fw-medium" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button">
-                        Pending Review <span class="badge bg-secondary ms-1">{{ pending_list.count }}</span>
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link border-0 fw-medium" id="passed-tab" data-bs-toggle="tab" data-bs-target="#passed" type="button">
-                        Passed
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link border-0 fw-medium" id="rejected-tab" data-bs-toggle="tab" data-bs-target="#rejected" type="button">
-                        Rejected
-                    </button>
-                </li>
-            </ul>
-        </div>
-        
-        <div class="card-body p-0">
-            <div class="tab-content" id="interviewTabsContent">
-                
-                <!-- Pending Review Tab -->
-                <div class="tab-pane fade show active" id="pending" role="tabpanel">
-                    {% if pending_list %}
-                    <div class="alert alert-light border-start border-4 border-warning mb-0 rounded-0">
-                        <small class="text-dark">Action required: Please review and mark the status for completed interviews</small>
-                    </div>
-                    {% endif %}
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th class="fw-semibold py-3">Candidate Name</th>
-                                    <th class="fw-semibold py-3">Interview Date</th>
-                                    <th class="fw-semibold py-3">Round</th>
-                                    <th class="fw-semibold py-3 text-end">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for i in pending_list %}
-                                <tr>
-                                    <td class="py-3">
-                                        <div class="fw-medium text-dark">{{ i.candidate.name }}</div>
-                                        <small class="text-muted">{{ i.candidate.email }}</small>
-                                    </td>
-                                    <td class="py-3 text-secondary">{{ i.interview_date|date:"d M Y, h:i A" }}</td>
-                                    <td class="py-3">
-                                        <span class="badge bg-light text-dark border">{{ i.get_interview_type_display }}</span>
-                                    </td>
-                                    <td class="py-3 text-end">
-                                        {% if user.is_superuser %}
-                                            <a href="{% url 'mark_interview' i.id 'passed' %}" class="btn btn-sm btn-outline-success me-1">
-                                                Mark Passed
-                                            </a>
-                                            <a href="{% url 'mark_interview' i.id 'rejected' %}" class="btn btn-sm btn-outline-danger">
-                                                Mark Rejected
-                                            </a>
-                                        {% else %}
-                                            <span class="badge bg-secondary">Awaiting Admin</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="4" class="text-center py-5 text-muted">
-                                        No pending reviews at this time
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Passed Candidates Tab -->
-                <div class="tab-pane fade" id="passed" role="tabpanel">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th class="fw-semibold py-3">Candidate Name</th>
-                                    <th class="fw-semibold py-3">Interview Date</th>
-                                    <th class="fw-semibold py-3">Round</th>
-                                    <th class="fw-semibold py-3">Current Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for i in passed_list %}
-                                <tr>
-                                    <td class="py-3">
-                                        <div class="fw-medium text-dark">{{ i.candidate.name }}</div>
-                                        <small class="text-muted">{{ i.candidate.email }}</small>
-                                    </td>
-                                    <td class="py-3 text-secondary">{{ i.interview_date|date:"d M Y" }}</td>
-                                    <td class="py-3">
-                                        <span class="badge bg-light text-dark border">{{ i.get_interview_type_display }}</span>
-                                    </td>
-                                    <td class="py-3">
-                                        {% if i.candidate.status == 'hired' %}
-                                            <span class="badge bg-primary">Hired</span>
-                                        {% else %}
-                                            <span class="badge bg-success">Passed</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="4" class="text-center py-5 text-muted">
-                                        No candidates have passed yet
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Rejected Candidates Tab -->
-                <div class="tab-pane fade" id="rejected" role="tabpanel">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th class="fw-semibold py-3">Candidate Name</th>
-                                    <th class="fw-semibold py-3">Interview Date</th>
-                                    <th class="fw-semibold py-3">Round</th>
-                                    <th class="fw-semibold py-3">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for i in rejected_list %}
-                                <tr>
-                                    <td class="py-3">
-                                        <div class="fw-medium text-dark">{{ i.candidate.name }}</div>
-                                        <small class="text-muted">{{ i.candidate.email }}</small>
-                                    </td>
-                                    <td class="py-3 text-secondary">{{ i.interview_date|date:"d M Y" }}</td>
-                                    <td class="py-3">
-                                        <span class="badge bg-light text-dark border">{{ i.get_interview_type_display }}</span>
-                                    </td>
-                                    <td class="py-3">
-                                        <span class="badge bg-danger">Rejected</span>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="4" class="text-center py-5 text-muted">
-                                        No rejected candidates
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </div>
-</div>
-
+{% block extra_css %}
 <style>
     .nav-tabs .nav-link {
         color: #6c757d;
         padding: 0.75rem 1.5rem;
+        transition: all 0.2s ease;
     }
     .nav-tabs .nav-link.active {
         color: #0d6efd;
@@ -193,5 +25,344 @@
     .table tbody tr:hover {
         background-color: #f8f9fa;
     }
+    .interview-card {
+        transition: all 0.3s ease;
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .action-btn {
+        transition: all 0.2s ease;
+    }
+    .action-btn:hover {
+        transform: scale(1.05);
+    }
 </style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="h4 fw-bold text-dark mb-1">
+                <i class="bi bi-clipboard-check me-2 text-primary"></i>
+                Completed Interviews
+            </h2>
+            <p class="text-secondary mb-0">
+                <i class="bi bi-funnel me-1"></i>
+                Review and manage interview results
+            </p>
+        </div>
+    </div>
+
+    <!-- Main Card -->
+    <div class="card interview-card">
+        <!-- Tabs Header -->
+        <div class="card-header bg-white border-bottom py-3">
+            <ul class="nav nav-tabs border-0 card-header-tabs" id="interviewTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active border-0 fw-medium" 
+                            id="pending-tab" 
+                            data-bs-toggle="tab" 
+                            data-bs-target="#pending" 
+                            type="button" 
+                            role="tab" 
+                            aria-controls="pending" 
+                            aria-selected="true">
+                        <i class="bi bi-clock-history me-2"></i>
+                        Pending Review
+                        {% if pending_list %}
+                        <span class="badge bg-warning text-dark ms-1">{{ pending_list|length }}</span>
+                        {% endif %}
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link border-0 fw-medium" 
+                            id="passed-tab" 
+                            data-bs-toggle="tab" 
+                            data-bs-target="#passed" 
+                            type="button" 
+                            role="tab" 
+                            aria-controls="passed" 
+                            aria-selected="false">
+                        <i class="bi bi-check-circle me-2"></i>
+                        Passed
+                        {% if passed_list %}
+                        <span class="badge bg-success ms-1">{{ passed_list|length }}</span>
+                        {% endif %}
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link border-0 fw-medium" 
+                            id="rejected-tab" 
+                            data-bs-toggle="tab" 
+                            data-bs-target="#rejected" 
+                            type="button" 
+                            role="tab" 
+                            aria-controls="rejected" 
+                            aria-selected="false">
+                        <i class="bi bi-x-circle me-2"></i>
+                        Rejected
+                        {% if rejected_list %}
+                        <span class="badge bg-danger ms-1">{{ rejected_list|length }}</span>
+                        {% endif %}
+                    </button>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Tabs Content -->
+        <div class="card-body p-0">
+            <div class="tab-content" id="interviewTabsContent">
+                
+                <!-- Pending Review Tab -->
+                <div class="tab-pane fade show active" id="pending" role="tabpanel" aria-labelledby="pending-tab">
+                    {% if pending_list %}
+                    <div class="alert alert-light border-start border-4 border-warning mb-0 rounded-0">
+                        <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+                        <small class="text-dark fw-medium">Action Required: Please review and mark the status for completed interviews</small>
+                    </div>
+                    {% endif %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="fw-semibold py-3 ps-4">
+                                        <i class="bi bi-person me-1"></i>Candidate Name
+                                    </th>
+                                    <th class="fw-semibold py-3">
+                                        <i class="bi bi-calendar-event me-1"></i>Interview Date
+                                    </th>
+                                    <th class="fw-semibold py-3">
+                                        <i class="bi bi-flag me-1"></i>Round
+                                    </th>
+                                    <th class="fw-semibold py-3 text-end pe-4">
+                                        <i class="bi bi-gear me-1"></i>Actions
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for i in pending_list %}
+                                <tr>
+                                    <td class="py-3 ps-4">
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-circle bg-secondary text-white me-2 d-flex align-items-center justify-content-center" 
+                                                 style="width: 40px; height: 40px; border-radius: 50%; font-weight: bold; font-size: 0.9rem;">
+                                                {{ i.candidate.name|slice:":1"|upper }}
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-dark">{{ i.candidate.name }}</div>
+                                                <small class="text-muted">{{ i.candidate.email }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3 text-secondary">
+                                        <i class="bi bi-calendar3 me-1"></i>
+                                        {{ i.interview_date|date:"d M Y, h:i A" }}
+                                    </td>
+                                    <td class="py-3">
+                                        <span class="badge bg-light text-dark border">
+                                            {{ i.get_interview_type_display }}
+                                        </span>
+                                    </td>
+                                    <td class="py-3 text-end pe-4">
+                                        {% if user.is_superuser %}
+                                            <div class="btn-group" role="group">
+                                                <!-- Mark Passed Button -->
+                                                <a href="{% url 'mark_interview' i.id 'passed' %}" 
+                                                   class="btn btn-sm btn-outline-success action-btn"
+                                                   title="Mark as Passed"
+                                                   onclick="return confirm('Mark {{ i.candidate.name }} as PASSED?')">
+                                                    <i class="bi bi-check-lg me-1"></i>Pass
+                                                </a>
+                                                
+                                                <!-- Mark Rejected Button -->
+                                                <a href="{% url 'mark_interview' i.id 'rejected' %}" 
+                                                   class="btn btn-sm btn-outline-danger action-btn"
+                                                   title="Mark as Rejected"
+                                                   onclick="return confirm('Mark {{ i.candidate.name }} as REJECTED?')">
+                                                    <i class="bi bi-x-lg me-1"></i>Reject
+                                                </a>
+                                            </div>
+                                        {% else %}
+                                            <span class="badge bg-secondary">
+                                                <i class="bi bi-lock-fill me-1"></i>Awaiting Admin
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-5">
+                                        <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                                        <p class="text-muted mt-3 mb-0">No pending reviews at this time</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Passed Candidates Tab -->
+                <div class="tab-pane fade" id="passed" role="tabpanel" aria-labelledby="passed-tab">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="fw-semibold py-3 ps-4">
+                                        <i class="bi bi-person me-1"></i>Candidate Name
+                                    </th>
+                                    <th class="fw-semibold py-3">
+                                        <i class="bi bi-calendar-event me-1"></i>Interview Date
+                                    </th>
+                                    <th class="fw-semibold py-3">
+                                        <i class="bi bi-flag me-1"></i>Round
+                                    </th>
+                                    <th class="fw-semibold py-3">
+                                        <i class="bi bi-bookmark-star me-1"></i>Current Status
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for i in passed_list %}
+                                <tr>
+                                    <td class="py-3 ps-4">
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-circle bg-success text-white me-2 d-flex align-items-center justify-content-center" 
+                                                 style="width: 40px; height: 40px; border-radius: 50%; font-weight: bold; font-size: 0.9rem;">
+                                                {{ i.candidate.name|slice:":1"|upper }}
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-dark">{{ i.candidate.name }}</div>
+                                                <small class="text-muted">{{ i.candidate.email }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3 text-secondary">
+                                        <i class="bi bi-calendar3 me-1"></i>
+                                        {{ i.interview_date|date:"d M Y" }}
+                                    </td>
+                                    <td class="py-3">
+                                        <span class="badge bg-light text-dark border">
+                                            {{ i.get_interview_type_display }}
+                                        </span>
+                                    </td>
+                                    <td class="py-3">
+                                        {% if i.candidate.status == 'hired' %}
+                                            <span class="badge bg-primary">
+                                                <i class="bi bi-trophy-fill me-1"></i>Hired
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle-fill me-1"></i>Passed
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-5">
+                                        <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                                        <p class="text-muted mt-3 mb-0">No candidates have passed yet</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Rejected Candidates Tab -->
+                <div class="tab-pane fade" id="rejected" role="tabpanel" aria-labelledby="rejected-tab">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="fw-semibold py-3 ps-4">
+                                        <i class="bi bi-person me-1"></i>Candidate Name
+                                    </th>
+                                    <th class="fw-semibold py-3">
+                                        <i class="bi bi-calendar-event me-1"></i>Interview Date
+                                    </th>
+                                    <th class="fw-semibold py-3">
+                                        <i class="bi bi-flag me-1"></i>Round
+                                    </th>
+                                    <th class="fw-semibold py-3">
+                                        <i class="bi bi-bookmark-x me-1"></i>Status
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for i in rejected_list %}
+                                <tr>
+                                    <td class="py-3 ps-4">
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-circle bg-danger text-white me-2 d-flex align-items-center justify-content-center" 
+                                                 style="width: 40px; height: 40px; border-radius: 50%; font-weight: bold; font-size: 0.9rem;">
+                                                {{ i.candidate.name|slice:":1"|upper }}
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-dark">{{ i.candidate.name }}</div>
+                                                <small class="text-muted">{{ i.candidate.email }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3 text-secondary">
+                                        <i class="bi bi-calendar3 me-1"></i>
+                                        {{ i.interview_date|date:"d M Y" }}
+                                    </td>
+                                    <td class="py-3">
+                                        <span class="badge bg-light text-dark border">
+                                            {{ i.get_interview_type_display }}
+                                        </span>
+                                    </td>
+                                    <td class="py-3">
+                                        <span class="badge bg-danger">
+                                            <i class="bi bi-x-circle-fill me-1"></i>Rejected
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-5">
+                                        <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                                        <p class="text-muted mt-3 mb-0">No rejected candidates</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-activate tab based on URL hash
+document.addEventListener('DOMContentLoaded', function() {
+    const hash = window.location.hash;
+    if (hash) {
+        const tabTrigger = document.querySelector(`button[data-bs-target="${hash}"]`);
+        if (tabTrigger) {
+            const tab = new bootstrap.Tab(tabTrigger);
+            tab.show();
+        }
+    }
+    
+    // Update URL hash when tab changes
+    const tabButtons = document.querySelectorAll('button[data-bs-toggle="tab"]');
+    tabButtons.forEach(button => {
+        button.addEventListener('shown.bs.tab', function(e) {
+            const target = e.target.getAttribute('data-bs-target');
+            window.location.hash = target;
+        });
+    });
+});
+</script>
 {% endblock %}

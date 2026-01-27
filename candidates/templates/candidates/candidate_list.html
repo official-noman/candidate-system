@@ -99,12 +99,14 @@
     <!-- Filter Tabs -->
     <div class="card candidate-card mb-4">
         <div class="card-body py-2">
-            <div class="filter-tabs d-flex gap-2">
+            <div class="filter-tabs d-flex flex-wrap gap-2">
                 <a href="{% url 'candidate_list' 'all' %}" 
                    class="btn btn-link text-decoration-none {% if filter == 'all' %}active{% endif %}">
                     <i class="bi bi-list-ul me-1"></i>
                     All Candidates
+                    {% if candidates %}
                     <span class="badge bg-secondary ms-1">{{ candidates|length }}</span>
+                    {% endif %}
                 </a>
                 <a href="{% url 'candidate_list' 'applied' %}" 
                    class="btn btn-link text-decoration-none {% if filter == 'applied' %}active{% endif %}">
@@ -196,7 +198,7 @@
                             </td>
                             <td class="text-center">
                                 <span class="badge bg-light text-dark border">
-                                    {{ c.experience_years }} Year{{ c.experience_years|pluralize }}
+                                    {{ c.experience_years }} Year{% if c.experience_years != 1 %}s{% endif %}
                                 </span>
                             </td>
                             <td class="text-center">
@@ -217,7 +219,7 @@
                                         <i class="bi bi-calendar-event me-1"></i>Scheduled
                                     </span>
                                 {% elif c.status == 'second_round' %}
-                                    <span class="status-badge bg-purple text-white" style="background: #764ba2;">
+                                    <span class="status-badge text-white" style="background: #764ba2;">
                                         <i class="bi bi-arrow-repeat me-1"></i>2nd Round
                                     </span>
                                 {% else %}
@@ -248,7 +250,7 @@
                                         <!-- Delete Button -->
                                         <button type="button"
                                                 class="btn btn-sm btn-outline-danger action-btn" 
-                                                onclick="deleteCandidate({{ c.id }}, '{{ c.name }}')"
+                                                onclick="deleteCandidate({{ c.id }}, '{{ c.name|escapejs }}')"
                                                 title="Delete">
                                             <i class="bi bi-trash-fill"></i>
                                         </button>
@@ -270,7 +272,7 @@
                                             <div class="modal-body">
                                                 <!-- Candidate Header -->
                                                 <div class="text-center mb-4 pb-3 border-bottom">
-                                                    <div class="avatar-circle bg-gradient-primary text-white mx-auto mb-3 d-flex align-items-center justify-content-center" 
+                                                    <div class="avatar-circle text-white mx-auto mb-3 d-flex align-items-center justify-content-center" 
                                                          style="width: 80px; height: 80px; border-radius: 50%; font-size: 2rem; font-weight: bold; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                                                         {{ c.name|slice:":1"|upper }}
                                                     </div>
@@ -284,28 +286,28 @@
                                                 <div class="row g-3 mb-4">
                                                     <div class="col-md-3 col-6">
                                                         <div class="info-card p-3 text-center h-100">
-                                                            <i class="bi bi-telephone-fill text-primary fs-4 mb-2"></i>
+                                                            <i class="bi bi-telephone-fill text-primary fs-4 mb-2 d-block"></i>
                                                             <small class="text-muted d-block text-uppercase fw-bold mb-1">Phone</small>
                                                             <span class="fw-bold text-dark d-block">{{ c.phone }}</span>
                                                         </div>
                                                     </div>
                                                     <div class="col-md-3 col-6">
                                                         <div class="info-card p-3 text-center h-100">
-                                                            <i class="bi bi-calendar-event text-success fs-4 mb-2"></i>
+                                                            <i class="bi bi-calendar-event text-success fs-4 mb-2 d-block"></i>
                                                             <small class="text-muted d-block text-uppercase fw-bold mb-1">Age</small>
-                                                            <span class="fw-bold text-dark d-block">{{ c.age|default:"--" }}</span>
+                                                            <span class="fw-bold text-dark d-block">{% if c.age %}{{ c.age }}{% else %}--{% endif %}</span>
                                                         </div>
                                                     </div>
                                                     <div class="col-md-3 col-6">
                                                         <div class="info-card p-3 text-center h-100">
-                                                            <i class="bi bi-briefcase-fill text-warning fs-4 mb-2"></i>
+                                                            <i class="bi bi-briefcase-fill text-warning fs-4 mb-2 d-block"></i>
                                                             <small class="text-muted d-block text-uppercase fw-bold mb-1">Experience</small>
                                                             <span class="fw-bold text-dark d-block">{{ c.experience_years }} Yrs</span>
                                                         </div>
                                                     </div>
                                                     <div class="col-md-3 col-6">
                                                         <div class="info-card p-3 text-center h-100">
-                                                            <i class="bi bi-bookmark-star-fill text-info fs-4 mb-2"></i>
+                                                            <i class="bi bi-bookmark-star-fill text-info fs-4 mb-2 d-block"></i>
                                                             <small class="text-muted d-block text-uppercase fw-bold mb-1">Status</small>
                                                             <span class="fw-bold text-dark d-block">{{ c.get_status_display }}</span>
                                                         </div>
@@ -389,7 +391,7 @@
                         {% empty %}
                         <tr>
                             <td colspan="7" class="text-center empty-state">
-                                <i class="bi bi-inbox"></i>
+                                <i class="bi bi-inbox d-block"></i>
                                 <h5 class="mt-3 text-muted">No Candidates Found</h5>
                                 <p class="text-muted mb-4">
                                     {% if filter == 'all' %}
@@ -417,15 +419,29 @@
 {% block extra_js %}
 <script>
 // Select All Checkbox
-document.getElementById('selectAll')?.addEventListener('change', function() {
-    const checkboxes = document.querySelectorAll('.candidate-checkbox');
-    checkboxes.forEach(cb => cb.checked = this.checked);
-});
+const selectAllCheckbox = document.getElementById('selectAll');
+if (selectAllCheckbox) {
+    selectAllCheckbox.addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.candidate-checkbox');
+        checkboxes.forEach(cb => cb.checked = this.checked);
+    });
+}
 
-// Delete Confirmation
+// Delete Confirmation with XSS protection
 function deleteCandidate(id, name) {
-    if (confirm(`Are you sure you want to delete "${name}"?\n\nThis action cannot be undone.`)) {
-        window.location.href = `/candidates/delete/${id}/`;
+    const escapedName = name.replace(/[<>"'&]/g, function(char) {
+        const escapeMap = {
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;',
+            '&': '&amp;'
+        };
+        return escapeMap[char];
+    });
+    
+    if (confirm('Are you sure you want to delete "' + escapedName + '"?\n\nThis action cannot be undone.')) {
+        window.location.href = '/candidates/delete/' + id + '/';
     }
 }
 
@@ -434,8 +450,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const alerts = document.querySelectorAll('.alert');
     alerts.forEach(alert => {
         setTimeout(() => {
-            const bsAlert = new bootstrap.Alert(alert);
-            bsAlert.close();
+            if (typeof bootstrap !== 'undefined' && bootstrap.Alert) {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }
         }, 5000);
     });
 });
