@@ -1,0 +1,280 @@
+{% extends 'candidates/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="h4 fw-semibold text-dark mb-1">Dashboard</h2>
+            <p class="text-secondary mb-0">Overview of recruitment operations and candidate pipeline</p>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="bg-primary bg-opacity-10 p-2 rounded">
+                            <i class="bi bi-people-fill text-primary fs-5"></i>
+                        </div>
+                        <small class="text-muted fw-medium">All Time</small>
+                    </div>
+                    <h3 class="fw-bold mb-1">{{ total_candidates }}</h3>
+                    <p class="text-muted small mb-0">Total Candidates</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="bg-success bg-opacity-10 p-2 rounded">
+                            <i class="bi bi-award-fill text-success fs-5"></i>
+                        </div>
+                        <small class="text-success fw-medium">Success</small>
+                    </div>
+                    <h3 class="fw-bold mb-1 text-success">{{ hired_count }}</h3>
+                    <p class="text-muted small mb-0">Hired Candidates</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="bg-danger bg-opacity-10 p-2 rounded">
+                            <i class="bi bi-x-circle-fill text-danger fs-5"></i>
+                        </div>
+                        <small class="text-danger fw-medium">Rejected</small>
+                    </div>
+                    <h3 class="fw-bold mb-1 text-danger">{{ rejected_count }}</h3>
+                    <p class="text-muted small mb-0">Not Selected</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="bg-warning bg-opacity-10 p-2 rounded">
+                            <i class="bi bi-calendar-check-fill text-warning fs-5"></i>
+                        </div>
+                        <small class="text-warning fw-medium">Scheduled</small>
+                    </div>
+                    <h3 class="fw-bold mb-1 text-warning">{{ upcoming_count }}</h3>
+                    <p class="text-muted small mb-0">Upcoming Interviews</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interview Panels -->
+    <div class="row g-4">
+        <!-- Upcoming Interviews Panel -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-3">
+                    <div>
+                        <h6 class="mb-0 fw-semibold">Upcoming Interviews</h6>
+                        <small class="text-muted">Scheduled candidates for review</small>
+                    </div>
+                    <a href="{% url 'download_phones' %}" class="btn btn-sm btn-outline-secondary" title="Download phone numbers">
+                        <i class="bi bi-download"></i>
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="fw-semibold py-3 ps-3">Candidate</th>
+                                    <th class="fw-semibold py-3">Scheduled</th>
+                                    <th class="fw-semibold py-3 pe-3">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for interview in upcoming_interviews %}
+                                <tr>
+                                    <td class="py-3 ps-3">
+                                        <div class="fw-medium text-dark">{{ interview.candidate.name }}</div>
+                                        <small class="text-muted">{{ interview.candidate.email }}</small>
+                                    </td>
+                                    <td class="py-3">
+                                        <div class="text-dark">{{ interview.interview_date|date:"d M Y" }}</div>
+                                        <small class="text-muted">{{ interview.interview_date|date:"h:i A" }}</small>
+                                    </td>
+                                    <td class="py-3 pe-3">
+                                        <span class="badge bg-warning text-dark px-2 py-1">Upcoming</span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-5">
+                                        <i class="bi bi-calendar-x text-muted fs-1 d-block mb-2"></i>
+                                        <p class="text-muted mb-0">No upcoming interviews scheduled</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% if upcoming_interviews %}
+                <div class="card-footer bg-white border-top text-center py-2">
+                    <a href="{% url 'upcoming_interviews' %}" class="text-decoration-none small fw-medium text-primary">
+                        View All Upcoming <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Completed Interviews Panel -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="mb-0 fw-semibold">Recently Completed</h6>
+                    <small class="text-muted">Interviews requiring action or review</small>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="fw-semibold py-3 ps-3">Candidate</th>
+                                    <th class="fw-semibold py-3">Date</th>
+                                    <th class="fw-semibold py-3 pe-3 text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for interview in completed_interviews %}
+                                <tr>
+                                    <td class="py-3 ps-3">
+                                        <div class="fw-medium text-dark">{{ interview.candidate.name }}</div>
+                                        <small class="text-muted">{{ interview.candidate.email }}</small>
+                                    </td>
+                                    <td class="py-3 text-secondary">
+                                        {{ interview.interview_date|date:"d M Y" }}
+                                    </td>
+                                    <td class="py-3 pe-3 text-center">
+                                        {% if interview.candidate.status == 'scheduled' or interview.candidate.status == 'applied' %}
+                                            {% if user.is_superuser %}
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <a href="{% url 'mark_interview' interview.id 'passed' %}" 
+                                                       class="btn btn-outline-success px-3"
+                                                       title="Mark as Passed">
+                                                        <i class="bi bi-check-lg"></i>
+                                                    </a>
+                                                    <a href="{% url 'mark_interview' interview.id 'rejected' %}" 
+                                                       class="btn btn-outline-danger px-3"
+                                                       title="Mark as Rejected">
+                                                        <i class="bi bi-x-lg"></i>
+                                                    </a>
+                                                </div>
+                                            {% else %}
+                                                <span class="badge bg-secondary px-2 py-1">Pending Admin</span>
+                                            {% endif %}
+                                        {% else %}
+                                            {% if interview.candidate.status == 'passed' %}
+                                                <span class="badge bg-success px-2 py-1">Passed</span>
+                                            {% elif interview.candidate.status == 'hired' %}
+                                                <span class="badge bg-primary px-2 py-1">Hired</span>
+                                            {% elif interview.candidate.status == 'rejected' %}
+                                                <span class="badge bg-danger px-2 py-1">Rejected</span>
+                                            {% elif interview.candidate.status == 'second_round' %}
+                                                <span class="badge bg-info px-2 py-1">2nd Round</span>
+                                            {% else %}
+                                                <span class="badge bg-light text-dark border px-2 py-1">
+                                                    {{ interview.candidate.status|title }}
+                                                </span>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-5">
+                                        <i class="bi bi-inbox text-muted fs-1 d-block mb-2"></i>
+                                        <p class="text-muted mb-0">No completed interviews yet</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% if completed_interviews %}
+                <div class="card-footer bg-white border-top text-center py-2">
+                    <a href="{% url 'completed_interviews' %}" class="text-decoration-none small fw-medium text-primary">
+                        View All Completed <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions (Admin Only) -->
+    {% if user.is_superuser %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body py-3">
+                    <div class="d-flex flex-wrap align-items-center gap-3">
+                        <span class="fw-semibold text-dark">Quick Actions:</span>
+                        <a href="{% url 'upload_excel' %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-file-earmark-arrow-up me-1"></i>Upload Excel
+                        </a>
+                        <a href="{% url 'schedule_interview' %}" class="btn btn-sm btn-outline-success">
+                            <i class="bi bi-calendar-plus me-1"></i>Schedule Interview
+                        </a>
+                        <a href="{% url 'candidate_list' 'all' %}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-people me-1"></i>All Candidates
+                        </a>
+                        <a href="{% url 'second_round_list' %}" class="btn btn-sm btn-outline-info">
+                            <i class="bi bi-arrow-repeat me-1"></i>Second Round
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .table > :not(caption) > * > * {
+        border-bottom-width: 1px;
+    }
+    
+    .table tbody tr {
+        transition: background-color 0.15s ease;
+    }
+    
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .card {
+        transition: all 0.2s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .btn-group-sm .btn {
+        font-size: 0.875rem;
+    }
+    
+    .badge {
+        font-weight: 500;
+        letter-spacing: 0.3px;
+    }
+</style>
+{% endblock %}

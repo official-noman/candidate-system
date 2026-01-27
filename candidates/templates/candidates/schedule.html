@@ -1,0 +1,53 @@
+{% extends 'candidates/base.html' %}
+{% block content %}
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h4>Schedule Interviews</h4>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="row mb-4 p-3 bg-light border rounded">
+                <div class="col-md-5">
+                    {{ form.interview_date.label_tag }}
+                    {{ form.interview_date }}
+                </div>
+                <div class="col-md-5">
+                    {{ form.range_input.label_tag }}
+                    {{ form.range_input }}
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-success w-100">Schedule</button>
+                </div>
+            </div>
+
+            <h5>Select Candidates Manually</h5>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Select</th>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Experience</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in candidates %}
+                    <tr>
+                        <td><input type="checkbox" name="candidate_ids" value="{{ c.id }}"></td>
+                        <td>{{ c.id }}</td>
+                        <td>{{ c.name }}</td>
+                        <td>{{ c.experience_years }}</td>
+                        <td>{{ c.get_status_display }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5">No candidates available for interview.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </form>
+    </div>
+</div>
+{% endblock %}

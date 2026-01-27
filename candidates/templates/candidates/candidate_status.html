@@ -1,0 +1,149 @@
+{% extends 'candidates/base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom py-4 text-center">
+                    <h4 class="mb-1 fw-semibold">Application Status</h4>
+                    <p class="text-muted small mb-0">Candidate Portal</p>
+                </div>
+                
+                <div class="card-body p-4 p-md-5">
+                    <!-- Candidate Info -->
+                    <div class="text-center mb-4 pb-4 border-bottom">
+                        <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                            <i class="bi bi-person-fill text-primary fs-1"></i>
+                        </div>
+                        <h5 class="fw-bold mb-1">{{ profile.name }}</h5>
+                        <p class="text-muted mb-0">{{ profile.email }}</p>
+                    </div>
+
+                    <!-- Status Display -->
+                    <div class="text-center mb-4">
+                        <p class="text-uppercase small fw-semibold text-muted mb-3">Current Status</p>
+                        
+                        {% if profile.status == 'hired' %}
+                            <div class="alert alert-success border-0 shadow-sm mb-0">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-check-circle-fill fs-3 me-3"></i>
+                                    <div class="text-start">
+                                        <h6 class="mb-0 fw-bold">Congratulations!</h6>
+                                        <p class="mb-0 small">You have been selected for the position</p>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                        {% elif profile.status == 'rejected' %}
+                            <div class="alert alert-danger border-0 shadow-sm mb-0">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-x-circle-fill fs-3 me-3"></i>
+                                    <div class="text-start">
+                                        <h6 class="mb-0 fw-bold">Application Not Selected</h6>
+                                        <p class="mb-0 small">Thank you for your interest</p>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                        {% elif profile.status == 'passed' %}
+                            <div class="alert alert-primary border-0 shadow-sm mb-0">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-star-fill fs-3 me-3"></i>
+                                    <div class="text-start">
+                                        <h6 class="mb-0 fw-bold">First Round Passed</h6>
+                                        <p class="mb-0 small">Awaiting next round schedule</p>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                        {% elif profile.status == 'second_round' %}
+                            <div class="alert alert-info border-0 shadow-sm mb-0">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-calendar-check-fill fs-3 me-3"></i>
+                                    <div class="text-start">
+                                        <h6 class="mb-0 fw-bold">Second Round Scheduled</h6>
+                                        <p class="mb-0 small">Check your email for details</p>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                        {% elif profile.status == 'scheduled' %}
+                            <div class="alert alert-warning border-0 shadow-sm mb-0">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-calendar-event-fill fs-3 me-3"></i>
+                                    <div class="text-start">
+                                        <h6 class="mb-0 fw-bold text-dark">Interview Scheduled</h6>
+                                        <p class="mb-0 small text-dark">Check your email for date and time</p>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                        {% else %}
+                            <div class="alert alert-light border shadow-sm mb-0">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-hourglass-split fs-3 me-3 text-secondary"></i>
+                                    <div class="text-start">
+                                        <h6 class="mb-0 fw-bold text-dark">Under Review</h6>
+                                        <p class="mb-0 small text-muted">Your application is being reviewed</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Additional Info -->
+                    <div class="bg-light rounded p-3 text-center">
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle me-1"></i>
+                            You will receive email notifications for any updates regarding your application status.
+                        </small>
+                    </div>
+                </div>
+
+                <div class="card-footer bg-white border-top text-center py-3">
+                    <small class="text-muted">
+                        For any queries, please contact us at 
+                        <a href="mailto:hr@company.com" class="text-decoration-none">hr@company.com</a>
+                    </small>
+                </div>
+            </div>
+
+            <!-- Logout Button -->
+            <div class="text-center mt-3">
+                <form action="{% url 'logout' %}" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-box-arrow-right me-1"></i>Logout
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .alert {
+        font-size: 0.9375rem;
+    }
+    
+    .alert i {
+        opacity: 0.9;
+    }
+    
+    .card {
+        animation: fadeIn 0.5s ease-in;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}

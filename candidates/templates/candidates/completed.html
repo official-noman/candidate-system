@@ -1,0 +1,197 @@
+{% extends 'candidates/base.html' %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="h4 fw-semibold text-dark mb-1">Completed Interviews</h2>
+            <p class="text-secondary mb-0">Review and manage interview results</p>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom py-3">
+            <ul class="nav nav-tabs border-0 card-header-tabs" id="interviewTabs" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active border-0 fw-medium" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button">
+                        Pending Review <span class="badge bg-secondary ms-1">{{ pending_list.count }}</span>
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link border-0 fw-medium" id="passed-tab" data-bs-toggle="tab" data-bs-target="#passed" type="button">
+                        Passed
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link border-0 fw-medium" id="rejected-tab" data-bs-toggle="tab" data-bs-target="#rejected" type="button">
+                        Rejected
+                    </button>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="card-body p-0">
+            <div class="tab-content" id="interviewTabsContent">
+                
+                <!-- Pending Review Tab -->
+                <div class="tab-pane fade show active" id="pending" role="tabpanel">
+                    {% if pending_list %}
+                    <div class="alert alert-light border-start border-4 border-warning mb-0 rounded-0">
+                        <small class="text-dark">Action required: Please review and mark the status for completed interviews</small>
+                    </div>
+                    {% endif %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="fw-semibold py-3">Candidate Name</th>
+                                    <th class="fw-semibold py-3">Interview Date</th>
+                                    <th class="fw-semibold py-3">Round</th>
+                                    <th class="fw-semibold py-3 text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for i in pending_list %}
+                                <tr>
+                                    <td class="py-3">
+                                        <div class="fw-medium text-dark">{{ i.candidate.name }}</div>
+                                        <small class="text-muted">{{ i.candidate.email }}</small>
+                                    </td>
+                                    <td class="py-3 text-secondary">{{ i.interview_date|date:"d M Y, h:i A" }}</td>
+                                    <td class="py-3">
+                                        <span class="badge bg-light text-dark border">{{ i.get_interview_type_display }}</span>
+                                    </td>
+                                    <td class="py-3 text-end">
+                                        {% if user.is_superuser %}
+                                            <a href="{% url 'mark_interview' i.id 'passed' %}" class="btn btn-sm btn-outline-success me-1">
+                                                Mark Passed
+                                            </a>
+                                            <a href="{% url 'mark_interview' i.id 'rejected' %}" class="btn btn-sm btn-outline-danger">
+                                                Mark Rejected
+                                            </a>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Awaiting Admin</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-5 text-muted">
+                                        No pending reviews at this time
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Passed Candidates Tab -->
+                <div class="tab-pane fade" id="passed" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="fw-semibold py-3">Candidate Name</th>
+                                    <th class="fw-semibold py-3">Interview Date</th>
+                                    <th class="fw-semibold py-3">Round</th>
+                                    <th class="fw-semibold py-3">Current Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for i in passed_list %}
+                                <tr>
+                                    <td class="py-3">
+                                        <div class="fw-medium text-dark">{{ i.candidate.name }}</div>
+                                        <small class="text-muted">{{ i.candidate.email }}</small>
+                                    </td>
+                                    <td class="py-3 text-secondary">{{ i.interview_date|date:"d M Y" }}</td>
+                                    <td class="py-3">
+                                        <span class="badge bg-light text-dark border">{{ i.get_interview_type_display }}</span>
+                                    </td>
+                                    <td class="py-3">
+                                        {% if i.candidate.status == 'hired' %}
+                                            <span class="badge bg-primary">Hired</span>
+                                        {% else %}
+                                            <span class="badge bg-success">Passed</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-5 text-muted">
+                                        No candidates have passed yet
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Rejected Candidates Tab -->
+                <div class="tab-pane fade" id="rejected" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="fw-semibold py-3">Candidate Name</th>
+                                    <th class="fw-semibold py-3">Interview Date</th>
+                                    <th class="fw-semibold py-3">Round</th>
+                                    <th class="fw-semibold py-3">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for i in rejected_list %}
+                                <tr>
+                                    <td class="py-3">
+                                        <div class="fw-medium text-dark">{{ i.candidate.name }}</div>
+                                        <small class="text-muted">{{ i.candidate.email }}</small>
+                                    </td>
+                                    <td class="py-3 text-secondary">{{ i.interview_date|date:"d M Y" }}</td>
+                                    <td class="py-3">
+                                        <span class="badge bg-light text-dark border">{{ i.get_interview_type_display }}</span>
+                                    </td>
+                                    <td class="py-3">
+                                        <span class="badge bg-danger">Rejected</span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-5 text-muted">
+                                        No rejected candidates
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .nav-tabs .nav-link {
+        color: #6c757d;
+        padding: 0.75rem 1.5rem;
+    }
+    .nav-tabs .nav-link.active {
+        color: #0d6efd;
+        border-bottom: 2px solid #0d6efd;
+        background-color: transparent;
+    }
+    .nav-tabs .nav-link:hover {
+        border-color: transparent;
+        color: #0d6efd;
+    }
+    .table > :not(caption) > * > * {
+        border-bottom-width: 1px;
+    }
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}

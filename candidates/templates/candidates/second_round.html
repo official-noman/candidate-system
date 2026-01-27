@@ -1,0 +1,48 @@
+{% extends 'candidates/base.html' %}
+{% block content %}
+<h3 class="mb-4">Second Round / Final Selection</h3>
+<div class="alert alert-info">
+    Candidates listed here have <strong>Passed</strong> the first round.
+</div>
+
+<div class="card shadow">
+    <div class="card-body">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Exp (Years)</th>
+                    <th>Email</th>
+                    <th>Actions (Admin Only)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in candidates %}
+                <tr>
+                    <td>{{ c.name }}</td>
+                    <td>{{ c.experience_years }}</td>
+                    <td>{{ c.email }}</td>
+                    <td>
+                        <div class="btn-group">
+                            <!-- Schedule 2nd Interview -->
+                            <a href="{% url 'schedule_second' c.id %}" class="btn btn-primary btn-sm">
+                                📅 Schedule 2nd Round
+                            </a>
+                            
+                            <!-- Direct Hire -->
+                            <a href="{% url 'hire_candidate' c.id %}" class="btn btn-success btn-sm" onclick="return confirm('Confirm Hire {{ c.name }}?')">
+                                🏆 Hire Now
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center text-muted">No candidates pending for 2nd round.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
