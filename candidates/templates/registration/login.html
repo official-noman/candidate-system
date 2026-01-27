@@ -1,0 +1,314 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Candidate Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .login-container {
+            max-width: 450px;
+            margin: 2rem auto;
+        }
+        
+        .login-card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .login-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .login-header h4 {
+            margin: 0;
+            font-weight: 600;
+        }
+        
+        .nav-tabs {
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .nav-tabs .nav-link {
+            color: #6c757d;
+            border: none;
+            padding: 1rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-tabs .nav-link:hover {
+            color: #495057;
+            border-color: transparent;
+        }
+        
+        .nav-tabs .nav-link.active {
+            color: #2c3e50;
+            background-color: transparent;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .tab-content {
+            padding: 2rem;
+        }
+        
+        .form-label {
+            font-weight: 500;
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-control {
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+        }
+        
+        .btn-login {
+            padding: 0.75rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+        }
+        
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .info-box {
+            background-color: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1.5rem;
+        }
+        
+        .info-box small {
+            color: #6c757d;
+        }
+        
+        .alert {
+            border-radius: 0.5rem;
+            border: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .help-text {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="login-container">
+            <div class="login-card">
+                <!-- Header -->
+                <div class="login-header">
+                    <i class="bi bi-shield-lock fs-1 mb-2 d-block"></i>
+                    <h4>Candidate Management System</h4>
+                    <p class="mb-0 small opacity-75">Secure Access Portal</p>
+                </div>
+
+                <!-- Error Messages -->
+                {% if form.errors %}
+                    <div class="p-3">
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-circle me-2"></i>
+                            <strong>Login Failed!</strong> Your username and password didn't match. Please try again.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if messages %}
+                    <div class="p-3 pb-0">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-2" role="alert">
+                            {% if message.tags == 'error' %}
+                                <i class="bi bi-x-circle me-2"></i>
+                            {% elif message.tags == 'success' %}
+                                <i class="bi bi-check-circle me-2"></i>
+                            {% elif message.tags == 'warning' %}
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                            {% else %}
+                                <i class="bi bi-info-circle me-2"></i>
+                            {% endif %}
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Tabs -->
+                <ul class="nav nav-tabs px-3" id="loginTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="staff-tab" data-bs-toggle="tab" data-bs-target="#staff-login" type="button">
+                            <i class="bi bi-person-badge me-1"></i> Staff / Admin
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="candidate-tab" data-bs-toggle="tab" data-bs-target="#candidate-status" type="button">
+                            <i class="bi bi-file-person me-1"></i> Check Status
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content">
+                    <!-- Staff/Admin Login Tab -->
+                    <div class="tab-pane fade show active" id="staff-login" role="tabpanel">
+                        <form method="post" action="{% url 'login' %}">
+                            {% csrf_token %}
+                            
+                            <div class="mb-3">
+                                <label for="id_username" class="form-label">
+                                    <i class="bi bi-person me-1"></i> Username
+                                </label>
+                                <input type="text" class="form-control" id="id_username" name="username" 
+                                       placeholder="Enter your username" required autofocus>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="id_password" class="form-label">
+                                    <i class="bi bi-lock me-1"></i> Password
+                                </label>
+                                <input type="password" class="form-control" id="id_password" name="password" 
+                                       placeholder="Enter your password" required>
+                            </div>
+
+                            <input type="hidden" name="next" value="{{ next }}">
+
+                            <button type="submit" class="btn btn-primary-custom btn-login w-100">
+                                <i class="bi bi-box-arrow-in-right me-2"></i> Login
+                            </button>
+
+                            <div class="info-box">
+                                <small>
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    <strong>For Staff & Admin:</strong> Use your assigned credentials to access the system.
+                                </small>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Candidate Status Check Tab -->
+                    <div class="tab-pane fade" id="candidate-status" role="tabpanel">
+                        <form method="post" action="{% url 'check_candidate_status' %}">
+                            {% csrf_token %}
+                            
+                            <div class="mb-3">
+                                <label for="candidate_email" class="form-label">
+                                    <i class="bi bi-envelope me-1"></i> Email Address
+                                </label>
+                                <input type="email" class="form-control" id="candidate_email" name="email" 
+                                       placeholder="Enter your registered email" required>
+                                <div class="help-text">
+                                    <i class="bi bi-lightbulb"></i> Use the email you provided in your application
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="candidate_phone" class="form-label">
+                                    <i class="bi bi-phone me-1"></i> Phone Number
+                                </label>
+                                <input type="text" class="form-control" id="candidate_phone" name="phone" 
+                                       placeholder="12125556789 (digits only, no spaces/dashes)" required>
+                                <div class="help-text">
+                                    <i class="bi bi-lightbulb"></i> Enter only numbers. Example: 12125556789 or 8801712345678
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary-custom btn-login w-100">
+                                <i class="bi bi-search me-2"></i> Check My Status
+                            </button>
+
+                            <div class="info-box">
+                                <small>
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    <strong>For Candidates:</strong> Enter your registered email and phone number (digits only) to view your application status. 
+                                    <strong>No spaces, dashes, or parentheses needed!</strong>
+                                </small>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="text-center py-3 border-top">
+                    <small class="text-muted">
+                        <i class="bi bi-shield-check me-1"></i>
+                        Authorized Access Only
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Auto-switch to candidate tab if there's a candidate-related error message
+        document.addEventListener('DOMContentLoaded', function() {
+            const messages = document.querySelectorAll('.alert');
+            messages.forEach(function(msg) {
+                if (msg.textContent.includes('Invalid credentials') || msg.textContent.includes('phone')) {
+                    const candidateTab = document.getElementById('candidate-tab');
+                    if (candidateTab) {
+                        candidateTab.click();
+                    }
+                }
+            });
+
+            // Phone input validation - only allow digits
+            const phoneInput = document.getElementById('candidate_phone');
+            if (phoneInput) {
+                phoneInput.addEventListener('input', function(e) {
+                    // Allow only digits
+                    this.value = this.value.replace(/\D/g, '');
+                });
+            }
+        });
+    </script>
+</body>
+</html>
