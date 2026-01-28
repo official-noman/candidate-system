@@ -1,48 +1,358 @@
 {% extends 'candidates/base.html' %}
-{% block content %}
-<h3 class="mb-4">Second Round / Final Selection</h3>
-<div class="alert alert-info">
-    Candidates listed here have <strong>Passed</strong> the first round.
-</div>
+{% load static %}
 
-<div class="card shadow">
-    <div class="card-body">
-        <table class="table align-middle">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Exp (Years)</th>
-                    <th>Email</th>
-                    <th>Actions (Admin Only)</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for c in candidates %}
-                <tr>
-                    <td>{{ c.name }}</td>
-                    <td>{{ c.experience_years }}</td>
-                    <td>{{ c.email }}</td>
-                    <td>
-                        <div class="btn-group">
-                            <!-- Schedule 2nd Interview -->
-                            <a href="{% url 'schedule_second' c.id %}" class="btn btn-primary btn-sm">
-                                📅 Schedule 2nd Round
-                            </a>
-                            
-                            <!-- Direct Hire -->
-                            <a href="{% url 'hire_candidate' c.id %}" class="btn btn-success btn-sm" onclick="return confirm('Confirm Hire {{ c.name }}?')">
-                                🏆 Hire Now
-                            </a>
-                        </div>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="4" class="text-center text-muted">No candidates pending for 2nd round.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+{% block title %}Second Round Selection - Recruitment System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .candidate-card {
+        transition: all 0.3s ease;
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .candidate-card:hover {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        transform: translateY(-2px);
+    }
+    .action-btn {
+        transition: all 0.2s ease;
+    }
+    .action-btn:hover {
+        transform: scale(1.05);
+    }
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    .avatar-circle {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.1rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    .experience-badge {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+    .empty-state {
+        padding: 4rem 2rem;
+        text-align: center;
+    }
+    .empty-state i {
+        font-size: 4rem;
+        color: #dee2e6;
+    }
+    .info-banner {
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        border-left: 4px solid #2196f3;
+        border-radius: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1 fw-bold">
+                <i class="bi bi-award-fill me-2 text-primary"></i>
+                Second Round Selection
+            </h2>
+            <p class="text-muted mb-0">
+                <i class="bi bi-star-fill me-1"></i>
+                Top performers from first round interviews
+            </p>
+        </div>
+        
+        <div class="d-flex gap-2">
+            <a href="{% url 'completed_interviews' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>
+                Back to Completed
+            </a>
+            <a href="{% url 'candidate_list' 'hired' %}" class="btn btn-success">
+                <i class="bi bi-trophy-fill me-2"></i>
+                View Hired
+            </a>
+        </div>
     </div>
+
+    <!-- Statistics Card -->
+    {% if candidates %}
+    <div class="stats-card">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h5 class="mb-2">
+                    <i class="bi bi-people-fill me-2"></i>
+                    Qualified Candidates
+                </h5>
+                <p class="mb-0 opacity-75">
+                    {{ total_count }} candidate{{ total_count|pluralize }} ready for final evaluation
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <div class="d-inline-block bg-white bg-opacity-25 rounded px-4 py-3">
+                    <div class="h2 mb-0 fw-bold">{{ total_count }}</div>
+                    <small class="opacity-75">Total</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Information Banner -->
+    <div class="alert info-banner d-flex align-items-center mb-4">
+        <i class="bi bi-info-circle-fill text-primary fs-4 me-3"></i>
+        <div>
+            <strong class="text-primary">Selection Options:</strong>
+            <p class="mb-0 text-dark">
+                You can either schedule a second round interview or directly hire qualified candidates.
+            </p>
+        </div>
+    </div>
+
+    <!-- Candidates Table -->
+    <div class="card candidate-card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4" style="width: 5%;">
+                                <i class="bi bi-hash"></i>
+                            </th>
+                            <th style="width: 30%;">
+                                <i class="bi bi-person-badge me-1"></i>Candidate
+                            </th>
+                            <th style="width: 25%;">
+                                <i class="bi bi-envelope me-1"></i>Contact
+                            </th>
+                            <th style="width: 15%;" class="text-center">
+                                <i class="bi bi-briefcase me-1"></i>Experience
+                            </th>
+                            <th style="width: 25%;" class="text-end pe-4">
+                                <i class="bi bi-gear me-1"></i>Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in candidates %}
+                        <tr>
+                            <td class="ps-4">
+                                <span class="text-muted fw-bold">#{{ forloop.counter }}</span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle me-3">
+                                        {{ c.name|slice:":1"|upper }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark mb-1">{{ c.name }}</div>
+                                        <small class="text-muted">
+                                            <i class="bi bi-patch-check-fill text-success me-1"></i>
+                                            Passed First Round
+                                        </small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <a href="mailto:{{ c.email }}" class="text-decoration-none text-primary d-block mb-1">
+                                        <i class="bi bi-envelope-fill me-1"></i>{{ c.email }}
+                                    </a>
+                                    {% if c.phone %}
+                                    <a href="tel:{{ c.phone }}" class="text-decoration-none text-dark">
+                                        <i class="bi bi-telephone-fill me-1"></i>{{ c.phone }}
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="experience-badge">
+                                    <i class="bi bi-award-fill me-1"></i>
+                                    {{ c.experience_years }} Year{% if c.experience_years != 1 %}s{% endif %}
+                                </span>
+                            </td>
+                            <td class="text-end pe-4">
+                                {% if user.is_superuser %}
+                                <div class="btn-group" role="group">
+                                    <!-- Schedule Second Round -->
+                                    <form method="post" 
+                                          action="{% url 'schedule_second' c.id %}" 
+                                          style="display:inline;"
+                                          onsubmit="return confirm('Schedule second round interview for {{ c.name|escapejs }}?')">
+                                        {% csrf_token %}
+                                        <button type="submit" 
+                                                class="btn btn-sm btn-primary action-btn"
+                                                title="Schedule Second Round Interview">
+                                            <i class="bi bi-calendar-event me-1"></i>
+                                            2nd Round
+                                        </button>
+                                    </form>
+                                    
+                                    <!-- Direct Hire -->
+                                    <form method="post" 
+                                          action="{% url 'hire_candidate' c.id %}" 
+                                          style="display:inline;"
+                                          onsubmit="return confirm('Are you sure you want to HIRE {{ c.name|escapejs }}?\n\nThis will mark them as hired immediately.')">
+                                        {% csrf_token %}
+                                        <button type="submit" 
+                                                class="btn btn-sm btn-success action-btn"
+                                                title="Hire Candidate">
+                                            <i class="bi bi-trophy-fill me-1"></i>
+                                            Hire Now
+                                        </button>
+                                    </form>
+                                </div>
+                                {% else %}
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-lock-fill me-1"></i>Admin Only
+                                </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="empty-state">
+                                <i class="bi bi-inbox d-block mb-3"></i>
+                                <h5 class="text-muted mb-2">No Candidates Available</h5>
+                                <p class="text-muted mb-4">
+                                    There are currently no candidates who have passed the first round.
+                                </p>
+                                <a href="{% url 'completed_interviews' %}" class="btn btn-outline-primary">
+                                    <i class="bi bi-arrow-left me-2"></i>
+                                    Review Completed Interviews
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        {% if candidates %}
+        <!-- Card Footer with Summary -->
+        <div class="card-footer bg-light border-top">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Showing {{ candidates|length }} qualified candidate{{ candidates|length|pluralize }}
+                    </small>
+                </div>
+                <div class="col-md-6 text-md-end mt-2 mt-md-0">
+                    <small class="text-muted">
+                        <i class="bi bi-shield-check me-1"></i>
+                        Admin actions required
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Help Section -->
+    {% if candidates %}
+    <div class="card border-0 bg-light mt-4">
+        <div class="card-body">
+            <h6 class="fw-bold mb-3">
+                <i class="bi bi-question-circle-fill text-primary me-2"></i>
+                Quick Guide
+            </h6>
+            <div class="row">
+                <div class="col-md-6 mb-3 mb-md-0">
+                    <div class="d-flex">
+                        <div class="me-3">
+                            <span class="btn btn-sm btn-primary disabled">
+                                <i class="bi bi-calendar-event"></i>
+                            </span>
+                        </div>
+                        <div>
+                            <strong class="d-block mb-1">Schedule 2nd Round</strong>
+                            <small class="text-muted">
+                                Candidate needs another interview before final decision
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex">
+                        <div class="me-3">
+                            <span class="btn btn-sm btn-success disabled">
+                                <i class="bi bi-trophy-fill"></i>
+                            </span>
+                        </div>
+                        <div>
+                            <strong class="d-block mb-1">Hire Now</strong>
+                            <small class="text-muted">
+                                Candidate is ready to be hired immediately
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-dismiss alerts after 5 seconds
+document.addEventListener('DOMContentLoaded', function() {
+    const alerts = document.querySelectorAll('.alert-dismissible');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            if (typeof bootstrap !== 'undefined' && bootstrap.Alert) {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }
+        }, 5000);
+    });
+});
+
+// Enhanced confirmation dialogs
+document.querySelectorAll('form[onsubmit]').forEach(form => {
+    const originalOnsubmit = form.onsubmit;
+    form.onsubmit = function(e) {
+        // Call original confirmation
+        return originalOnsubmit.call(this, e);
+    };
+});
+
+// Add loading state to buttons on form submission
+document.querySelectorAll('form').forEach(form => {
+    form.addEventListener('submit', function() {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            const originalHTML = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+            
+            // Re-enable after 3 seconds in case of error
+            setTimeout(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalHTML;
+            }, 3000);
+        }
+    });
+});
+</script>
 {% endblock %}
