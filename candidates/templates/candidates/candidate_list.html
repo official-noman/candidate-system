@@ -19,6 +19,8 @@
         padding: 0.4rem 0.8rem;
         border-radius: 20px;
         font-size: 0.85rem;
+        display: inline-flex;
+        align-items: center;
     }
     .action-btn {
         transition: all 0.2s ease;
@@ -28,15 +30,22 @@
     }
     .filter-tabs {
         border-bottom: 2px solid #e9ecef;
+        overflow-x: auto;
+        white-space: nowrap;
     }
     .filter-tabs .btn {
         border-radius: 0;
         border-bottom: 3px solid transparent;
         transition: all 0.2s ease;
+        white-space: nowrap;
     }
     .filter-tabs .btn.active {
         border-bottom-color: #0d6efd;
         font-weight: 600;
+        color: #0d6efd;
+    }
+    .filter-tabs .btn:hover {
+        color: #0d6efd;
     }
     .info-card {
         background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
@@ -45,6 +54,7 @@
     }
     .info-card:hover {
         background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+        transform: translateY(-2px);
     }
     .experience-table {
         font-size: 0.9rem;
@@ -63,35 +73,122 @@
         font-size: 4rem;
         color: #dee2e6;
     }
+    .page-header-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .stats-badge {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+    }
+    .avatar-circle {
+        transition: all 0.2s ease;
+    }
+    .avatar-circle:hover {
+        transform: scale(1.1);
+    }
+    .table tbody tr {
+        transition: all 0.2s ease;
+    }
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    .bulk-actions-bar {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 1rem 2rem;
+        border-radius: 50px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        display: none;
+        z-index: 1000;
+    }
+    .bulk-actions-bar.show {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    .search-box {
+        max-width: 300px;
+    }
+    @media (max-width: 768px) {
+        .filter-tabs {
+            flex-direction: column;
+        }
+        .filter-tabs .btn {
+            text-align: left;
+            border-left: 3px solid transparent;
+            border-bottom: none;
+        }
+        .filter-tabs .btn.active {
+            border-left-color: #0d6efd;
+            border-bottom-color: transparent;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid px-4 py-4">
     
-    <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="mb-1 fw-bold">
-                <i class="bi bi-people-fill me-2 text-primary"></i>
-                {{ filter|title }} Candidates
-            </h2>
-            <p class="text-muted mb-0">
-                <i class="bi bi-diagram-3-fill me-1"></i>
-                Manage and track candidate applications
-            </p>
+    <!-- Enhanced Page Header -->
+    <div class="page-header-card">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2 class="mb-2 fw-bold">
+                    <i class="bi bi-people-fill me-2"></i>
+                    {{ filter|title }} Candidates
+                </h2>
+                <p class="mb-0 opacity-75">
+                    <i class="bi bi-diagram-3-fill me-1"></i>
+                    Comprehensive candidate management and tracking system
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                {% if candidates %}
+                <div class="stats-badge d-inline-block">
+                    <div class="h3 mb-0 fw-bold">{{ candidates|length }}</div>
+                    <small class="opacity-75">Total Candidates</small>
+                </div>
+                {% endif %}
+            </div>
         </div>
-        
-        {% if user.is_superuser %}
+    </div>
+
+    <!-- Action Buttons -->
+    {% if user.is_superuser %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="search-box">
+            <form method="get" action="" class="position-relative">
+                <input type="text" 
+                       name="search" 
+                       class="form-control pe-5" 
+                       placeholder="Search candidates..."
+                       value="{{ search_query|default:'' }}">
+                <button type="submit" class="btn btn-link position-absolute top-50 end-0 translate-middle-y">
+                    <i class="bi bi-search"></i>
+                </button>
+            </form>
+        </div>
         <div class="d-flex gap-2">
             <a href="{% url 'upload_excel' %}" class="btn btn-success">
                 <i class="bi bi-file-earmark-arrow-up me-2"></i>
                 Upload Excel
             </a>
-           
+            <button class="btn btn-outline-primary" id="bulkSelectBtn">
+                <i class="bi bi-check-square me-2"></i>
+                Bulk Actions
+            </button>
         </div>
-        {% endif %}
     </div>
+    {% endif %}
 
     <!-- Filter Tabs -->
     <div class="card candidate-card mb-4">
@@ -101,7 +198,7 @@
                    class="btn btn-link text-decoration-none {% if filter == 'all' %}active{% endif %}">
                     <i class="bi bi-list-ul me-1"></i>
                     All Candidates
-                    {% if candidates %}
+                    {% if filter == 'all' and candidates %}
                     <span class="badge bg-secondary ms-1">{{ candidates|length }}</span>
                     {% endif %}
                 </a>
@@ -109,26 +206,41 @@
                    class="btn btn-link text-decoration-none {% if filter == 'applied' %}active{% endif %}">
                     <i class="bi bi-file-earmark-text me-1"></i>
                     Applied
+                    {% if filter == 'applied' and candidates %}
+                    <span class="badge bg-secondary ms-1">{{ candidates|length }}</span>
+                    {% endif %}
                 </a>
                 <a href="{% url 'candidate_list' 'scheduled' %}" 
                    class="btn btn-link text-decoration-none {% if filter == 'scheduled' %}active{% endif %}">
                     <i class="bi bi-calendar-check me-1"></i>
                     Scheduled
+                    {% if filter == 'scheduled' and candidates %}
+                    <span class="badge bg-warning text-dark ms-1">{{ candidates|length }}</span>
+                    {% endif %}
                 </a>
                 <a href="{% url 'candidate_list' 'passed' %}" 
                    class="btn btn-link text-decoration-none {% if filter == 'passed' %}active{% endif %}">
                     <i class="bi bi-check-circle me-1"></i>
                     Passed
+                    {% if filter == 'passed' and candidates %}
+                    <span class="badge bg-info ms-1">{{ candidates|length }}</span>
+                    {% endif %}
                 </a>
                 <a href="{% url 'candidate_list' 'hired' %}" 
                    class="btn btn-link text-decoration-none {% if filter == 'hired' %}active{% endif %}">
                     <i class="bi bi-trophy-fill me-1"></i>
                     Hired
+                    {% if filter == 'hired' and candidates %}
+                    <span class="badge bg-success ms-1">{{ candidates|length }}</span>
+                    {% endif %}
                 </a>
                 <a href="{% url 'candidate_list' 'rejected' %}" 
                    class="btn btn-link text-decoration-none {% if filter == 'rejected' %}active{% endif %}">
                     <i class="bi bi-x-circle me-1"></i>
                     Rejected
+                    {% if filter == 'rejected' and candidates %}
+                    <span class="badge bg-danger ms-1">{{ candidates|length }}</span>
+                    {% endif %}
                 </a>
             </div>
         </div>
@@ -169,7 +281,8 @@
                         <tr>
                             <td class="ps-4">
                                 <input type="checkbox" class="form-check-input candidate-checkbox" 
-                                       value="{{ c.id }}" name="candidate_ids">
+                                       value="{{ c.id }}" name="candidate_ids"
+                                       data-name="{{ c.name }}">
                             </td>
                             <td>
                                 <div class="d-flex align-items-center">
@@ -185,7 +298,7 @@
                             </td>
                             <td>
                                 <a href="mailto:{{ c.email }}" class="text-decoration-none text-primary">
-                                    {{ c.email }}
+                                    <i class="bi bi-envelope-fill me-1"></i>{{ c.email }}
                                 </a>
                             </td>
                             <td>
@@ -195,7 +308,7 @@
                             </td>
                             <td class="text-center">
                                 <span class="badge bg-light text-dark border">
-                                    {{ c.experience_years }} Year{% if c.experience_years != 1 %}s{% endif %}
+                                    <i class="bi bi-award me-1"></i>{{ c.experience_years }} Year{% if c.experience_years != 1 %}s{% endif %}
                                 </span>
                             </td>
                             <td class="text-center">
@@ -285,7 +398,7 @@
                                                         <div class="info-card p-3 text-center h-100">
                                                             <i class="bi bi-telephone-fill text-primary fs-4 mb-2 d-block"></i>
                                                             <small class="text-muted d-block text-uppercase fw-bold mb-1">Phone</small>
-                                                            <span class="fw-bold text-dark d-block">{{ c.phone }}</span>
+                                                            <span class="fw-bold text-dark d-block small">{{ c.phone }}</span>
                                                         </div>
                                                     </div>
                                                     <div class="col-md-3 col-6">
@@ -306,7 +419,7 @@
                                                         <div class="info-card p-3 text-center h-100">
                                                             <i class="bi bi-bookmark-star-fill text-info fs-4 mb-2 d-block"></i>
                                                             <small class="text-muted d-block text-uppercase fw-bold mb-1">Status</small>
-                                                            <span class="fw-bold text-dark d-block">{{ c.get_status_display }}</span>
+                                                            <span class="fw-bold text-dark d-block small">{{ c.get_status_display }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -391,15 +504,17 @@
                                 <i class="bi bi-inbox d-block"></i>
                                 <h5 class="mt-3 text-muted">No Candidates Found</h5>
                                 <p class="text-muted mb-4">
-                                    {% if filter == 'all' %}
-                                        Start by uploading an Excel file or adding candidates manually.
+                                    {% if search_query %}
+                                        No candidates match your search "{{ search_query }}". Try a different search term.
+                                    {% elif filter == 'all' %}
+                                        Start by uploading an Excel file with candidate data.
                                     {% else %}
                                         No candidates with status "{{ filter }}" at the moment.
                                     {% endif %}
                                 </p>
                                 {% if user.is_superuser %}
-                                <a href="{% url 'candidate_create' %}" class="btn btn-primary">
-                                    <i class="bi bi-person-plus-fill me-2"></i>Add First Candidate
+                                <a href="{% url 'upload_excel' %}" class="btn btn-success">
+                                    <i class="bi bi-file-earmark-arrow-up me-2"></i>Upload Excel File
                                 </a>
                                 {% endif %}
                             </td>
@@ -409,7 +524,43 @@
                 </table>
             </div>
         </div>
+        
+        <!-- Table Footer -->
+        {% if candidates %}
+        <div class="card-footer bg-light border-top">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Showing {{ candidates|length }} candidate{{ candidates|length|pluralize }}
+                        {% if search_query %}matching "{{ search_query }}"{% endif %}
+                    </small>
+                </div>
+                <div class="col-md-6 text-md-end mt-2 mt-md-0">
+                    <small class="text-muted">
+                        <i class="bi bi-funnel me-1"></i>
+                        Filter: {{ filter|title }}
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
+
+    <!-- Bulk Actions Bar -->
+    <div class="bulk-actions-bar text-white" id="bulkActionsBar">
+        <span id="selectedCount" class="fw-bold me-2">0 selected</span>
+        <button class="btn btn-sm btn-light" onclick="exportSelected()">
+            <i class="bi bi-download me-1"></i>Export
+        </button>
+        <button class="btn btn-sm btn-danger" onclick="deleteSelected()">
+            <i class="bi bi-trash me-1"></i>Delete
+        </button>
+        <button class="btn btn-sm btn-outline-light" onclick="clearSelection()">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+
 </div>
 {% endblock %}
 
@@ -417,11 +568,68 @@
 <script>
 // Select All Checkbox
 const selectAllCheckbox = document.getElementById('selectAll');
+const bulkActionsBar = document.getElementById('bulkActionsBar');
+const selectedCountSpan = document.getElementById('selectedCount');
+
 if (selectAllCheckbox) {
     selectAllCheckbox.addEventListener('change', function() {
         const checkboxes = document.querySelectorAll('.candidate-checkbox');
         checkboxes.forEach(cb => cb.checked = this.checked);
+        updateBulkActionsBar();
     });
+}
+
+// Update bulk actions bar visibility
+document.querySelectorAll('.candidate-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', updateBulkActionsBar);
+});
+
+function updateBulkActionsBar() {
+    const checkedBoxes = document.querySelectorAll('.candidate-checkbox:checked');
+    const count = checkedBoxes.length;
+    
+    if (count > 0) {
+        bulkActionsBar.classList.add('show');
+        selectedCountSpan.textContent = `${count} selected`;
+    } else {
+        bulkActionsBar.classList.remove('show');
+    }
+}
+
+function clearSelection() {
+    document.querySelectorAll('.candidate-checkbox').forEach(cb => cb.checked = false);
+    selectAllCheckbox.checked = false;
+    updateBulkActionsBar();
+}
+
+function exportSelected() {
+    const checkedBoxes = document.querySelectorAll('.candidate-checkbox:checked');
+    if (checkedBoxes.length === 0) {
+        alert('Please select candidates to export');
+        return;
+    }
+    
+    const names = Array.from(checkedBoxes).map(cb => cb.dataset.name).join('\n');
+    const blob = new Blob([names], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'selected_candidates.txt';
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+
+function deleteSelected() {
+    const checkedBoxes = document.querySelectorAll('.candidate-checkbox:checked');
+    if (checkedBoxes.length === 0) {
+        alert('Please select candidates to delete');
+        return;
+    }
+    
+    if (confirm(`Are you sure you want to delete ${checkedBoxes.length} candidate(s)?\n\nThis action cannot be undone.`)) {
+        // In a real implementation, this would send a request to the server
+        alert('Bulk delete functionality would be implemented here');
+    }
 }
 
 // Delete Confirmation with XSS protection
@@ -438,13 +646,22 @@ function deleteCandidate(id, name) {
     });
     
     if (confirm('Are you sure you want to delete "' + escapedName + '"?\n\nThis action cannot be undone.')) {
-        window.location.href = '/candidates/delete/' + id + '/';
+        // Show loading state
+        const deleteBtn = event.target.closest('button');
+        const originalHTML = deleteBtn.innerHTML;
+        deleteBtn.disabled = true;
+        deleteBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+        
+        // Redirect to delete URL
+        setTimeout(() => {
+            window.location.href = '/candidates/delete/' + id + '/';
+        }, 300);
     }
 }
 
 // Auto-dismiss alerts
 document.addEventListener('DOMContentLoaded', function() {
-    const alerts = document.querySelectorAll('.alert');
+    const alerts = document.querySelectorAll('.alert-dismissible');
     alerts.forEach(alert => {
         setTimeout(() => {
             if (typeof bootstrap !== 'undefined' && bootstrap.Alert) {
@@ -453,6 +670,43 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 5000);
     });
+});
+
+// Bulk select button toggle
+const bulkSelectBtn = document.getElementById('bulkSelectBtn');
+if (bulkSelectBtn) {
+    bulkSelectBtn.addEventListener('click', function() {
+        const checkboxes = document.querySelectorAll('.candidate-checkbox');
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        
+        checkboxes.forEach(cb => cb.checked = !allChecked);
+        selectAllCheckbox.checked = !allChecked;
+        updateBulkActionsBar();
+    });
+}
+
+// Enhanced row hover effect
+document.querySelectorAll('tbody tr').forEach(row => {
+    row.addEventListener('mouseenter', function() {
+        this.style.backgroundColor = '#f8f9fa';
+    });
+    row.addEventListener('mouseleave', function() {
+        if (!this.querySelector('.candidate-checkbox:checked')) {
+            this.style.backgroundColor = '';
+        }
+    });
+});
+
+// Add loading state to action buttons
+document.querySelectorAll('.action-btn').forEach(btn => {
+    if (btn.tagName === 'A') {
+        btn.addEventListener('click', function() {
+            const icon = this.querySelector('i');
+            if (icon) {
+                icon.className = 'spinner-border spinner-border-sm';
+            }
+        });
+    }
 });
 </script>
 {% endblock %}
