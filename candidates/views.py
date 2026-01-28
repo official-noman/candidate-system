@@ -2,7 +2,8 @@
 Candidate Management System - Views Module
 
 Author: Noman Mahmud
-Last Updated: 2026-01-27
+Last Updated: 2026-01-28
+Version: 2.0
 """
 
 import logging
@@ -131,11 +132,15 @@ def upload_excel(request: HttpRequest) -> HttpResponse:
     Phone numbers are cleaned (digits only) for password creation.
     
     Expected Excel columns:
-        - Name: Full name
+        - Name: Full name (required)
         - Email: Email address (required, unique)
-        - Phone: Phone number (any format)
+        - Phone: Phone number (required, any format)
         - Age: Age (optional)
         - Experience (Years): Years of experience (optional)
+        - Company_1: First company name (optional)
+        - Position_1: First position (optional)
+        - Company_2: Second company name (optional)
+        - Position_2: Second position (optional)
     
     Args:
         request: HTTP request object
@@ -189,6 +194,20 @@ def upload_excel(request: HttpRequest) -> HttpResponse:
                             if name == 'nan':
                                 name = 'Unknown'
                             
+                            # Extract previous experience
+                            previous_exp = {}
+                            if pd.notna(row.get('Company_1')) and pd.notna(row.get('Position_1')):
+                                company_1 = str(row.get('Company_1')).strip()
+                                position_1 = str(row.get('Position_1')).strip()
+                                if company_1 and position_1:
+                                    previous_exp[company_1] = position_1
+                            
+                            if pd.notna(row.get('Company_2')) and pd.notna(row.get('Position_2')):
+                                company_2 = str(row.get('Company_2')).strip()
+                                position_2 = str(row.get('Position_2')).strip()
+                                if company_2 and position_2:
+                                    previous_exp[company_2] = position_2
+                            
                             # Create or update user
                             user, created = User.objects.get_or_create(
                                 username=email,
@@ -212,6 +231,7 @@ def upload_excel(request: HttpRequest) -> HttpResponse:
                                     'phone': raw_phone,  # Store original format for display
                                     'age': int(row.get('Age')) if pd.notna(row.get('Age')) else None,
                                     'experience_years': int(row.get('Experience (Years)', 0)) if pd.notna(row.get('Experience (Years)')) else 0,
+                                    'previous_experience': previous_exp,
                                     'status': 'applied'
                                 }
                             )
@@ -227,14 +247,14 @@ def upload_excel(request: HttpRequest) -> HttpResponse:
                 if success_count > 0:
                     messages.success(
                         request,
-                        f"Successfully imported {success_count} candidate(s)."
+                        f"✅ Successfully imported {success_count} candidate(s)."
                     )
                     logger.info(f"Excel upload: {success_count} candidates imported by {request.user.username}")
                 
                 if error_count > 0:
                     messages.warning(
                         request,
-                        f"Failed to import {error_count} row(s). Check logs for details."
+                        f"⚠️ Failed to import {error_count} row(s). Check logs for details."
                     )
                     # Show first 5 errors
                     for error in errors[:5]:
@@ -246,7 +266,7 @@ def upload_excel(request: HttpRequest) -> HttpResponse:
                 logger.error(f"Excel upload error: {str(e)}", exc_info=True)
                 messages.error(
                     request,
-                    f"Error processing file: {str(e)}. Please check file format and try again."
+                    f"❌ Error processing file: {str(e)}. Please check file format and try again."
                 )
         else:
             messages.error(request, "Invalid form submission. Please check the file and try again.")
@@ -403,7 +423,7 @@ def schedule_interview(request: HttpRequest) -> HttpResponse:
                         
                         messages.success(
                             request,
-                            f"Successfully scheduled {scheduled_count} interview(s) for {interview_date.strftime('%B %d, %Y at %I:%M %p')}"
+                            f"✅ Successfully scheduled {scheduled_count} interview(s) for {interview_date.strftime('%B %d, %Y at %I:%M %p')}"
                         )
                         
                         logger.info(
@@ -587,10 +607,10 @@ def mark_interview(request: HttpRequest, interview_id: int, action: str) -> Http
         
         if action == 'passed':
             interview.candidate.status = 'passed'
-            messages.success(request, f"{interview.candidate.name} marked as PASSED")
+            messages.success(request, f"✅ {interview.candidate.name} marked as PASSED")
         elif action == 'rejected':
             interview.candidate.status = 'rejected'
-            messages.success(request, f"{interview.candidate.name} marked as REJECTED")
+            messages.success(request, f"❌ {interview.candidate.name} marked as REJECTED")
         else:
             messages.error(request, "Invalid action")
             return redirect('completed_interviews')
@@ -675,7 +695,7 @@ def schedule_second_round(request: HttpRequest, candidate_id: int) -> HttpRespon
         
         messages.success(
             request,
-            f"Second round scheduled for {candidate.name} on {interview_date.strftime('%B %d, %Y')}"
+            f"📅 Second round scheduled for {candidate.name} on {interview_date.strftime('%B %d, %Y')}"
         )
         
         logger.info(f"Second round scheduled for candidate {candidate_id} by {request.user.username}")
@@ -706,7 +726,7 @@ def hire_candidate(request: HttpRequest, candidate_id: int) -> HttpResponse:
         candidate.status = 'hired'
         candidate.save()
         
-        messages.success(request, f" {candidate.name} has been hired!")
+        messages.success(request, f"🎉 {candidate.name} has been hired!")
         
         logger.info(f"Candidate {candidate_id} hired by {request.user.username}")
         
@@ -743,7 +763,7 @@ def candidate_edit(request: HttpRequest, pk: int) -> HttpResponse:
             
             if form.is_valid():
                 form.save()
-                messages.success(request, f"Successfully updated {candidate.name}'s information")
+                messages.success(request, f"✅ Successfully updated {candidate.name}'s information")
                 logger.info(f"Candidate {pk} updated by {request.user.username}")
                 return redirect('candidate_list', status_filter='all')
             else:
@@ -785,7 +805,7 @@ def delete_candidate(request: HttpRequest, pk: int) -> HttpResponse:
         # Delete will cascade to user if configured
         candidate.delete()
         
-        messages.success(request, f"Successfully deleted {candidate_name}")
+        messages.success(request, f"🗑️ Successfully deleted {candidate_name}")
         logger.info(f"Candidate {pk} deleted by {request.user.username}")
         
     except Exception as e:
@@ -824,7 +844,7 @@ def check_candidate_status(request: HttpRequest) -> HttpResponse:
             if not email or not cleaned_phone:
                 messages.error(
                     request,
-                    " Please provide both email and phone number."
+                    "⚠️ Please provide both email and phone number."
                 )
                 return redirect('login')
             
@@ -833,10 +853,10 @@ def check_candidate_status(request: HttpRequest) -> HttpResponse:
             
             if user is not None:
                 # Check if user has candidate profile
-                if not hasattr(user, 'candidate') and not Candidate.objects.filter(user=user).exists():
+                if not hasattr(user, 'candidate_profile') and not Candidate.objects.filter(user=user).exists():
                     messages.error(
                         request,
-                        " No candidate profile found for this account."
+                        "❌ No candidate profile found for this account."
                     )
                     return redirect('login')
                 
@@ -845,7 +865,7 @@ def check_candidate_status(request: HttpRequest) -> HttpResponse:
                 
                 messages.success(
                     request,
-                    f" Welcome {user.first_name}! Redirecting to your dashboard..."
+                    f"👋 Welcome {user.first_name}! Redirecting to your dashboard..."
                 )
                 
                 logger.info(f"Candidate status check: successful login for {email}")
@@ -856,8 +876,8 @@ def check_candidate_status(request: HttpRequest) -> HttpResponse:
                 # Failed authentication
                 messages.error(
                     request,
-                    " Invalid credentials! Please check your email and phone number. "
-                    "Enter phone as digits only (e.g., 12125556789)."
+                    "❌ Invalid credentials! Please check your email and phone number. "
+                    "Enter phone as digits only (e.g., 9175551234)."
                 )
                 
                 logger.warning(f"Candidate status check: failed login attempt for {email}")
