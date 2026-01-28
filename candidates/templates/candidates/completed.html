@@ -169,20 +169,22 @@
                                         {% if user.is_superuser %}
                                             <div class="btn-group" role="group">
                                                 <!-- Mark Passed Button -->
-                                                <a href="{% url 'mark_interview' i.id 'passed' %}" 
-                                                   class="btn btn-sm btn-outline-success action-btn"
-                                                   title="Mark as Passed"
-                                                   onclick="return confirm('Mark {{ i.candidate.name }} as PASSED?')">
-                                                    <i class="bi bi-check-lg me-1"></i>Pass
-                                                </a>
+                                                <form method="post" action="{% url 'mark_interview' i.id 'passed' %}" style="display:inline;">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-sm btn-outline-success action-btn"
+            onclick="return confirm('Mark {{ i.candidate.name }} as PASSED?')">
+        <i class="bi bi-check-lg me-1"></i>Pass
+    </button>
+</form>
                                                 
                                                 <!-- Mark Rejected Button -->
-                                                <a href="{% url 'mark_interview' i.id 'rejected' %}" 
-                                                   class="btn btn-sm btn-outline-danger action-btn"
-                                                   title="Mark as Rejected"
-                                                   onclick="return confirm('Mark {{ i.candidate.name }} as REJECTED?')">
-                                                    <i class="bi bi-x-lg me-1"></i>Reject
-                                                </a>
+                                                <form method="post" action="{% url 'mark_interview' i.id 'rejected' %}" style="display:inline;">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-sm btn-outline-danger action-btn"
+            onclick="return confirm('Mark {{ i.candidate.name }} as REJECTED?')">
+        <i class="bi bi-x-lg me-1"></i>Reject
+    </button>
+</form>
                                             </div>
                                         {% else %}
                                             <span class="badge bg-secondary">
